@@ -1,115 +1,81 @@
 #!/usr/bin/python3
 import mysql.connector
-import datetime
-capacity=int(input("Enter the capacity of your knapsack:\n"))
 
-# Sql queries to connect to database
-
-sql="select Val,weight,ratio from knapsack"
-con=mysql.connector.connect(user="******", password="*********", host="localhost", database="knapsack")
-cursor=con.cursor()
+sql="SELECT * FROM knapsack "
+con = mysql.connector.connect(user="root", password="", host="127.0.0.1", database="lab4")
+cursor = con.cursor()
 cursor.execute(sql)
+list = cursor.fetchall()
 
-# Sorting according to the values in decreasing order
+print("------Given Data\n------",list,"\n")
+maxWeight=int(input("Enter Maximum Weight of Knapsack = "))
+load=0
+totalValue=0
+knapsack=[]
+knapsackWeight=0
+print("\n------Criteria1-----")
 
-Val=[]
-rows=cursor.fetchall()
-# print(rows)
+sql1="SELECT * FROM knapsack ORDER BY Value DESC"
+cursor.execute(sql1)
+list1 = cursor.fetchall()
 
-data = {}
-for row in rows:
-    data[row[0]] = row[1]
+for i in range(0, len(list1)):
+    load+=list1[i][2]
+    if load<=maxWeight:
+        knapsack.append(list1[i][0])
+        totalValue+=list1[i][1]
+        knapsackWeight=load
+print("Items in the Knapsack = ",knapsack)
+print("Total Weight in the Knapsack = ",knapsackWeight)
+print("Total value of the Knapsack = ", totalValue)
 
-data1 = {}
-for row in rows:
-    data1[row[2]] = row[1]
+print("\n------Criteria2------")
 
-for row in rows:
-    Val.append(row[0])
-arr=Val.copy()
-arr.sort(reverse = True)
+sql2="SELECT * FROM knapsack ORDER BY WEIGHT ASC"
+cursor.execute(sql2)
+list2 = cursor.fetchall()
+load=0
+totalValue=0
+knapsack=[]
+for i in range(0, len(list2)):
+    load+=list2[i][2]
+    if load<=maxWeight:
+        knapsack.append(list2[i][0])
+        totalValue+=list2[i][1]
+        knapsackWeight=load
+print("Items in the Knapsack = ",knapsack)
+print("Total Weight in the Knapsack = ",knapsackWeight)
+print("Total value of the Knapsack = ", totalValue)
 
-""" print("\nThe sorted values are:\n")
-for i in range(len(arr)):
-    print(arr[i])
- """
-# Sorting according to the weights in increasing order
+print("\n------Criteria3------")
 
-# print("\nThe sorted weights are as follows:\n")
-weight=[]
+finalList=[]
+for i in range(0,len(list)):
+    innerlist=[]
+    for j in range(0,3):
+        innerlist.append(list[i][j])
+    finalList.append(innerlist)
+    profit=finalList[i][1]/finalList[i][2]
+    finalList[i].append(profit)
 
-for row in rows:
-    weight.append(row[1])
-arr1=weight.copy()
-arr1.sort()
-""" for j in range(len(arr1)):
-    print(arr1[j]) """
-
-# Sorting according to the ratio of values to the weights
-
-# print("\nThe sorted ratios are as follows:\n")
-ratio=[]
-for row in rows:
-    ratio.append(row[2])
-arr2=ratio.copy()
-arr2.sort(reverse = True)
-""" for k in range(len(arr2)):
-    print(arr2[k])
- """
-def criteria1():
-    # Sort according to value in decreasing order
-    weight=0
-    finalvalue=0
-    for i in range(len(arr)):
-        t = data[arr[i]]
-        if weight + t <= capacity:
-            weight = weight + t
-
-            finalvalue = finalvalue + arr[i]
-    print("The weight in knapsack when sorted according to values in decreasing order is :",weight,"\n")
-    print("And the value is:",finalvalue)
-    
-def criteria2():
-    # Sort according to increasing weights
-    Weight=0
-    finalvalue=0
-    for j in range(len(arr1)):
-        t = arr1[j]
-
-        if Weight + t <= capacity:
-            Weight = Weight + t
-
-            val = list(data.keys())[list(data.values()).index(t)]
-
-            finalvalue += val
-            
-    print("\nThe weight in knapsack when sorted according to increasing weights  is :",Weight)
-    print("\nAnd the value is:",finalvalue)
-
-def criteria3():
-    # Sort according to the ratio of value to weight
-    Weight=0
-    finalvalue = 0
-    for k in range(len(arr2)):
-        temp = data1[arr2[k]]
-
-        if Weight + temp <= capacity:
-            Weight = Weight + temp
-            val = temp * arr2[k]
-
-        else:
-            remain = capacity - Weight
-            Weight = Weight + remain
-            val = arr2[k] * remain
-
-
-        finalvalue += val
-
-    print("\nThe weight of knapsack when we consider the ratio of value to weight is:",Weight)
-    print("\nAnd the value is:",finalvalue)
-
-criteria1()
-
-criteria2()
-
-criteria3()
+finalList.sort(key = lambda x: x[3],reverse=True)
+load=0
+totalValue=0
+knapsack=[]
+count=0
+for i in range(0, len(finalList)):
+    load+=finalList[i][2]
+    if load<=maxWeight:
+        knapsack.append(finalList[i][0])
+        totalValue+=finalList[i][1]
+        knapsackWeight=load
+        count+=1
+leftWeight=maxWeight-knapsackWeight
+if leftWeight>0:
+    value=finalList[count][3]*leftWeight
+    knapsack.append(finalList[count][0])
+    totalValue+=value
+    knapsackWeight+=leftWeight
+print("Items in the Knapsack = ",knapsack)
+print("Total Weight in the Knapsack = ",knapsackWeight)
+print("Total value of the Knapsack = ", totalValue)
